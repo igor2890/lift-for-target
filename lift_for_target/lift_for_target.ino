@@ -43,10 +43,13 @@ void checkSensorAndMoveMechan() {
   if ((closedSensorValue - 500) > takeSensorValue()) {
     makeNoise(200);
     delay(10000);
-    makeNoise(100);
+    makeNoise(50);
+    delay(50);
+    makeNoise(50);
+    delay(300);
     moveMechanUp();
-    closedSensorValue = takeSensorValue();
     delay(100);
+    closedSensorValue = takeSensorValue();
     moveMechanDown();
     delay(100);
     makeNoise(50);
