@@ -9,53 +9,53 @@
 #define SENSOR_PIN A7
 
 int closedSensorValue = 0;
+bool isMakeMove = false;
 const int stepsOneWay = 1200;
-int battVoltValue = 0;
+const int timeBeforeUp = 3000;
 
 void setup() {
   //Serial.begin(SERIAL_SPEED);
   pinMode(DIR_STEPPER_PIN, OUTPUT);
   pinMode(STEP_STEPPER_PIN, OUTPUT);
   pinMode(TONE_PIN, OUTPUT);
-  battVoltValue = takeVoltValue();
+  if (takeVoltValue() < 50) {
+    makeBeep(10, 10, 3);
+    while(1) {
+    }
+  }
   closedSensorValue = takeSensorValue();
   delay(2000);
   moveMechanDown();
-  makeNoise(50);
-  delay(50);
-  makeNoise(50);
+  makeBeep(50, 50, 2);
 }
 
 void loop() {
-  checkSensorAndMoveMechan();
-
-  battVoltValue = takeVoltValue();
-  
-  if (battVoltValue < 105) {
-    while(1) {
-      makeNoise(70);
-      delay(2000);
-    }
+  isMakeMove = checkSensorAndMoveMechan(closedSensorValue);
+  if (isMakeMove) {
+    closedSensorValue = takeSensorValue();
+    isMakeMove = false;
   }
 }
 
-void checkSensorAndMoveMechan() {
-  if ((closedSensorValue - 500) > takeSensorValue()) {
-    makeNoise(200);
-    delay(10000);
-    makeNoise(50);
-    delay(50);
-    makeNoise(50);
-    delay(300);
+bool checkSensorAndMoveMechan(int sensorValue) {
+  if ((sensorValue - 500) > takeSensorValue()) {
+    delay(200);
+    makeBeep(200, 200, 1);
+
+    while (takeVoltValue() < 105) {
+      makeBeep(20, 20, 5);
+      delay(1000);
+    }
+    
+    delay(timeBeforeUp);
+    
+    makeBeep(50, 50, 2);
     moveMechanUp();
-    delay(100);
-    closedSensorValue = takeSensorValue();
     moveMechanDown();
-    delay(100);
-    makeNoise(50);
-    delay(50);
-    makeNoise(50);
+    makeBeep(50, 50, 2);
+    return true;
   }
+  return false;
 }
 
 int takeSensorValue() {
@@ -100,8 +100,11 @@ void makeStep() {
   delayMicroseconds(500);
 }
 
-void makeNoise(int longNoise){
-  PORTD |= B00000100;
-  delay(longNoise);
-  PORTD &= ~B00000100;
+void makeBeep(int beepLength, int pauseBetweenBeep, int times){
+  for(int i = 0; i < times; ++i){
+    PORTD |= B00000100;
+    delay(beepLength);
+    PORTD &= ~B00000100;
+    delay(pauseBetweenBeep);
+  }
 }
