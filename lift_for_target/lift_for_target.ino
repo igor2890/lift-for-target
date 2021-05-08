@@ -18,14 +18,10 @@ void setup() {
   pinMode(DIR_STEPPER_PIN, OUTPUT);
   pinMode(STEP_STEPPER_PIN, OUTPUT);
   pinMode(TONE_PIN, OUTPUT);
-  if (takeVoltValue() < 50) {
-    makeBeep(10, 10, 3);
-    while(1) {
-    }
-  }
+  checkBatteryConnection();
   closedSensorValue = takeSensorValue();
   delay(2000);
-  moveMechanDown();
+  moveMechanUpOrDown(false, stepsOneWay);
   makeBeep(50, 50, 2);
 }
 
@@ -39,23 +35,46 @@ void loop() {
 
 bool checkSensorAndMoveMechan(int sensorValue) {
   if ((sensorValue - 500) > takeSensorValue()) {
-    delay(200);
-    makeBeep(200, 200, 1);
+    delay(1000);
+    if ((sensorValue - 500) > takeSensorValue()) {
+      makeBeep(200, 200, 1);
 
-    while (takeVoltValue() < 105) {
-      makeBeep(20, 20, 5);
-      delay(1000);
+      checkBatteryVolt();
+    
+      delay(timeBeforeUp);
+    
+      makeBeep(50, 50, 2);
+      moveMechanUpOrDown(true, stepsOneWay - 200);
+      finishingUp(sensorValue);
+      moveMechanUpOrDown(false, 200);
+      
+      while ((sensorValue - 500) > takeSensorValue()) {
+        finishingUp(sensorValue);
+        moveMechanUpOrDown(false, 200);
+      }
+      
+      delay(500);
+      moveMechanUpOrDown(false, stepsOneWay - 200);
+      makeBeep(50, 50, 2);
+      return true;
     }
-    
-    delay(timeBeforeUp);
-    
-    makeBeep(50, 50, 2);
-    moveMechanUp();
-    moveMechanDown();
-    makeBeep(50, 50, 2);
-    return true;
   }
   return false;
+}
+
+void checkBatteryConnection() {
+  if (takeVoltValue() < 50) {
+    makeBeep(10, 10, 3);
+    while(1) {
+    }
+  }
+}
+
+void checkBatteryVolt() {
+  while (takeVoltValue() < 105) {
+    makeBeep(20, 20, 5);
+    delay(1000);
+  }
 }
 
 int takeSensorValue() {
@@ -71,25 +90,31 @@ int takeVoltValue(){
   return (analogRead(VOLT_PIN) * 10) / 43;
 }
 
-void moveMechanUp(){
-  turnStepperUp();
-  for (int i=0; i<stepsOneWay; ++i) {
+void finishingUp(int sensorValue) {
+  while ((sensorValue - 500) > takeSensorValue()) {
+    delayMicroseconds(500);
+    makeStep();
+  }
+  moveMechanUpOrDown(true, 20);
+}
+
+void moveMechanUpOrDown(bool isUp, int steps) {
+  if (isUp) {
+    dirMoveUp();
+  }
+  else {
+    dirMoveDown();
+  }
+  for (int i=0; i<steps; ++i) {
     makeStep();
   }
 }
 
-void moveMechanDown(){
-  turnStepperDown();
-  for (int i=0; i<stepsOneWay; ++i) {
-    makeStep();
-  }
-}
-
-void turnStepperDown() {
+void dirMoveDown() {
   PORTB |= B00100000; //digitalWrite(DIR_STEPPER_PIN, HIGH);
 }
 
-void turnStepperUp() {
+void dirMoveUp() {
   PORTB &= ~B00100000; //digitalWrite(DIR_STEPPER_PIN, LOW);
 }
 
