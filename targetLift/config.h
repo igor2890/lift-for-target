@@ -1,9 +1,11 @@
 #define SERIAL_SPEED 115200
 
+#define INTERRUPT_N 0
+
 #define DIR_PIN 13
 #define STEP_PIN 12
 
-#define TONE_PIN 2
+#define TONE_PIN 11
 
 #define VOLT_PIN A3
 #define LASER_SENS_PIN A7

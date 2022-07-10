@@ -28,7 +28,7 @@ bool SensorsManager::isBatteryNotConnected() {
 }
 
 double SensorsManager::batteryVoltage(){
-  return (analogRead(VOLT_PIN) / 43.0);
+  return (analogRead(VOLT_PIN) / 40.0);
 }
 
 bool SensorsManager::isAllTargetsDown() {
